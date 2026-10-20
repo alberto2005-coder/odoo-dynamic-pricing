@@ -59,5 +59,77 @@ Para evitar bloqueos de IP (Error 403 / Captchas) y renderizar webs modernas (SP
 ---
 
 **Autor:** Alberto Ortiz  
+**Licencia:** MIT  
+**Categoría:** Sales / E-commerce
+
+---
+
+# English Version
+
+**Dynamic Competitor Pricing for Odoo**
+
+**Dynamic Competitor Pricing** is an advanced module for Odoo (v17, 18 and 19) designed to automate and optimize your e-commerce or inventory pricing strategy by scraping competitor prices.
+
+## 🚀 Key Features
+
+*   **Automated Scraping:** Periodic extraction of competitor prices (e.g. Amazon, Google Shopping, and others).
+*   **Smart Price Rules:** Automatically adjust your product price to match the competition, be a percentage cheaper, or reduce the price by a fixed amount.
+*   **Margin Protection (Safety Net):** You will never sell at a loss. The system stops price drops if the calculation suggests a price below Cost (`standard_price`) + the configured Minimum Margin.
+*   **Critical Fluctuation Alerts:** Automatically generates warnings and Odoo **To-Do activities** when a competitor changes its price above a defined threshold (e.g. 15%).
+*   **Sales Strategy ROI:** Integrated analytics panel comparing sales and revenue in the active period vs. the same period before the rule was active.
+*   **Bulk Management (CSV):** Built-in wizard to import thousands of competitor URLs and a centralized list for direct export to Excel.
+*   **History and Audit:** Charts embedded in the product dashboard and an auditable log of every price change (when, how much, and why).
+*   **Block Avoidance (Throttling & Proxies):** Automatic User-Agent rotation, random delays (throttling) between requests and support for Proxies via system parameters.
+
+## ⚙️ Configuration and Usage
+
+### 1. Enable dynamic pricing per product
+Go to Sales > Products and open any product (Template). You will see a new tab called **"Dynamic Competitor Pricing"**.
+- Toggle **Enable Dynamic Pricing**.
+- Set your **Minimum Margin (%)** (minimum margin over cost).
+- Choose your **Adjustment Rule** (e.g. `Lowest competitor - X%`).
+- Set the **Alert Threshold (%)** (default `15.0%`).
+
+### 2. Add Competitors
+In the same tab, add competitor URLs in the **Competitor URLs** section. Select the platform and paste the URL of their product page.
+
+### 3. Automation (CRON)
+The module automatically installs a scheduled action (CRON) called `Dynamic Pricing: Update Dynamic Prices`. By default it runs once a day at night, extracting prices and adjusting the `list_price` of the entire active catalog.
+
+## 📊 Results and ROI Analysis
+Every product with active dynamic pricing includes state-of-the-art analytics:
+1. **Price History:** A smart button **"Price Fluctuation"** in the top-right corner opens a historical chart with every price jump applied by the system.
+2. **Sales Impact (ROI):** The "Dynamic Competitor Pricing" tab shows a sales performance panel that crosses real-time data with the `sale` module, reporting units sold, accumulated revenue and percentage increase vs. the equivalent previous period.
+
+## 📥 Bulk Catalog Management (CSV/Excel)
+To instantly seed large catalogs:
+1. Go to **Sales > Products > Import Competitor URLs**.
+2. Upload a CSV file with the columns `sku` (internal reference), `platform` and `url`. The wizard handles the rest.
+3. Go to **Sales > Products > Competitor URLs** to see the consolidated catalog of competitor links and use Odoo's native export tool to obtain templates or detailed reports.
+
+## 🔔 Active Competitor Alerts
+If a competitor undercuts prices or raises them above the percentage configured in **Alert Threshold (%)**:
+* A highlighted warning log is recorded in the **product chatter**.
+* An **Odoo activity (To-Do)** is automatically created and assigned to the product's responsible admin so strategic decisions can be made immediately.
+
+## 🛠 Advanced Technical Configuration
+To avoid IP blocks (Error 403 / Captchas) and render modern websites (SPAs):
+1. Enable developer mode in Odoo.
+2. Go to Settings > Technical > **System Parameters**.
+3. Add any of the following parameters as needed:
+   - `dynamic_pricing.proxy_url`: Your Proxy server (e.g. `http://user:password@proxy_ip:port`).
+   - `dynamic_pricing.api_provider`: `scrapingbee` or `zenrows` to delegate the scraping.
+   - `dynamic_pricing.api_key`: Your private API key for the chosen provider.
+   - `dynamic_pricing.render_js`: Set to `True` if the provider must render JavaScript (ideal for SPAs and React/Vue sites).
+
+> **Multi-threaded Efficiency:** The CRON is optimized with **Multi-Threading** (`ThreadPoolExecutor`). It extracts multiple URLs of the same product in parallel, radically speeding up execution on huge catalogs.
+
+---
+
+**Author:** Alberto Ortiz  
+**License:** MIT  
+**Category:** Sales / E-commerce
+
+**Autor:** Alberto Ortiz  
 **Licencia:** LGPL-3  
 **Categoría:** Sales / E-commerce
