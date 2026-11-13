@@ -1,135 +1,339 @@
 # Dynamic Competitor Pricing para Odoo
 
-**Dynamic Competitor Pricing** es un módulo avanzado para Odoo (v17, 18 y 19) diseñado para automatizar y optimizar la estrategia de precios de tu e-commerce o inventario mediante el scraping de precios de la competencia.
+[![Odoo](https://img.shields.io/badge/Odoo-17%20%7C%2018%20%7C%2019-714B67?logo=odoo&logoColor=white)](https://www.odoo.com/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![MIT](https://img.shields.io/badge/Licencia-MIT-green)](LICENSE)
 
-## 🚀 Características Principales
-
-*   **Scraping Automatizado:** Extracción periódica de los precios de la competencia (ej. Amazon, Google Shopping, entre otros).
-*   **Reglas de Precio Inteligentes:** Posibilidad de ajustar automáticamente el precio de tu producto para igualar a la competencia, ser un porcentaje más barato, o reducir el precio por un importe fijo.
-*   **Protección de Margen (Safety Net):** Nunca venderás a pérdida. El sistema frena la bajada de precios si el cálculo sugiere un precio inferior al Coste (`standard_price`) + el Margen Mínimo Configurado.
-*   **Alertas de Fluctuación Crítica:** Genera avisos y **actividades To-Do** de Odoo automáticamente si un competidor cambia su precio por encima de un umbral establecido (ej. 15%).
-*   **ROI de Estrategia de Ventas:** Panel analítico integrado que compara ventas y facturación en el período activo vs. el mismo período anterior sin la regla activa.
-*   **Gestión Masiva (CSV):** Asistente integrado para importar miles de URLs de competidores y listado centralizado para exportación directa a Excel.
-*   **Histórico y Auditoría:** Gráficos integrados en el dashboard del producto y registro auditable de todos los cambios de precios (Cuándo, cuánto, y por qué).
-*   **Evitación de Bloqueos (Throttling & Proxies):** Rotación automática de User-Agents, retrasos aleatorios (throttling) entre peticiones y soporte para añadir Proxies mediante parámetros del sistema.
-
-## ⚙️ Configuración y Uso
-
-### 1. Activar precios dinámicos por producto
-Ve a Ventas > Productos y abre cualquier producto (Template). Verás una nueva pestaña llamada **"Dynamic Competitor Pricing"**.
-- Activa el interruptor **Enable Dynamic Pricing**.
-- Establece tu **Minimum Margin (%)** (Margen Mínimo sobre coste).
-- Selecciona tu **Adjustment Rule** (Regla de Ajuste: e.g. `Lowest competitor - X%`).
-- Establece el **Alert Threshold (%)** (Umbral de Alerta, por defecto al `15.0%`).
-
-### 2. Añadir a la Competencia
-En la misma pestaña, añade las URLs de la competencia en la sección **Competitor URLs**. Selecciona la plataforma y pega la URL de su ficha de producto.
-
-### 3. Automatización (CRON)
-El módulo instala automáticamente una acción planificada (CRON) llamada `Dynamic Pricing: Update Dynamic Prices`. Por defecto, se ejecuta una vez al día de madrugada, extrayendo los precios y ajustando el `list_price` de todo el catálogo activo.
-
-## 📊 Visualización de Resultados y Análisis ROI
-Cada producto con precios dinámicos activos dispone de herramientas analíticas de última generación:
-1. **Historial de Precios:** Un botón inteligente (Smart Button) **"Price Fluctuation"** en la parte superior derecha abre un gráfico histórico con todos los saltos de precio aplicados por el sistema.
-2. **Impacto en Ventas (ROI):** En la pestaña "Dynamic Competitor Pricing" se despliega un panel de rendimiento de ventas que cruza datos en tiempo real con el módulo de `sale`, informándote de las unidades vendidas, ingresos acumulados e incremento porcentual frente al periodo equivalente anterior.
-
-## 📥 Gestión Masiva de Catálogos (CSV/Excel)
-Para inicializar de forma instantánea catálogos de gran envergadura:
-1. Dirígete a **Ventas > Productos > Import Competitor URLs**.
-2. Sube un archivo CSV con las columnas `sku` (referencia interna), `platform` y `url`. El asistente se encargará del resto de forma inteligente.
-3. Ve a **Ventas > Productos > Competitor URLs** para ver el catálogo consolidado de enlaces de competidores y usar la herramienta de exportación nativa de Odoo para obtener plantillas o informes detallados.
-
-## 🔔 Alertas Activas de Competidores
-Si un competidor rompe los precios o los sube por encima del porcentaje configurado en **Alert Threshold (%)**:
-* Se registra un log destacado de advertencia en el **chatter del producto**.
-* Se crea automáticamente una **actividad de Odoo (To-Do)** asignada al administrador responsable del producto para que pueda tomar decisiones estratégicas de inmediato.
-
-## 🛠 Configuración Avanzada Técnica
-Para evitar bloqueos de IP (Error 403 / Captchas) y renderizar webs modernas (SPAs):
-1. Activa el modo desarrollador en Odoo.
-2. Ve a Ajustes > Técnico > **Parámetros del Sistema**.
-3. Añade cualquiera de los siguientes parámetros según tus necesidades:
-   - `dynamic_pricing.proxy_url`: Tu servidor Proxy (ej. `http://usuario:contraseña@ip_proxy:puerto`).
-   - `dynamic_pricing.api_provider`: `scrapingbee` o `zenrows` para delegar el scraping.
-   - `dynamic_pricing.api_key`: Tu clave de API privada para el proveedor elegido.
-   - `dynamic_pricing.render_js`: Escribe `True` si necesitas que el proveedor renderice el JavaScript (ideal para SPAs y webs React/Vue).
-
-> **Eficiencia Multi-hilo:** El CRON está optimizado con **Multi-Threading** (`ThreadPoolExecutor`). Extrae múltiples URLs de un mismo producto en paralelo, acelerando radicalmente la ejecución en catálogos inmensos.
+[Español](#español) · [English](#english)
 
 ---
 
-**Autor:** Alberto Ortiz  
-**Licencia:** MIT  
-**Categoría:** Sales / E-commerce
+## Español
+
+### Índice
+
+- [Descripción](#descripción)
+- [Características](#características)
+- [Requisitos](#requisitos)
+- [Instalación](#instalación)
+- [Configuración por producto](#configuración-por-producto)
+- [Automatización (CRON)](#automatización-cron)
+- [Panel de resultados y ROI](#panel-de-resultados-y-roi)
+- [Importación masiva de URLs](#importación-masiva-de-urls)
+- [Alertas de competencia](#alertas-de-competencia)
+- [Configuración avanzada](#configuración-avanzada)
+- [Estructura del módulo](#estructura-del-módulo)
+- [Límites y buenas prácticas](#límites-y-buenas-prácticas)
+- [Licencia](#licencia)
+
+### Descripción
+
+Módulo de **Odoo 17, 18 y 19** que ajusta el precio de venta de tus productos a partir del **precio de la competencia**, obtenido por scraping. Define una regla de ajuste, un margen mínimo de seguridad y un umbral de alerta; un CRON diario recorre el catálogo activo, actualiza `list_price` y deja registro de cada cambio.
+
+### Características
+
+- **Scraping automatizado** de fichas de producto (Amazon, Google Shopping y otras).
+- **Cuatro reglas de ajuste**: competidor más barato menos un porcentaje, menos un importe fijo, media de competidores y coincidencia de tendencia predictiva.
+- **Protección de margen**: nunca baja de `standard_price` + margen mínimo configurado.
+- **Alertas de fluctuación**: si un competidor se mueve más allá del umbral, deja un aviso en el chatter y crea una actividad *To-Do*.
+- **ROI de la estrategia**: compara unidades y facturación del periodo activo con el periodo anterior equivalente.
+- **Histórico auditable**: botón *Price Fluctuation* con gráfico y lista de cambios.
+- **Importación masiva por CSV** y listado centralizado de URLs exportable a Excel.
+- **Anti-bloqueo**: rotación de *User-Agents*, retardos aleatorios y soporte de proxies o APIs de scraping.
+- **Multi-hilo**: varias URLs del mismo producto se consultan en paralelo con `ThreadPoolExecutor`.
+
+### Requisitos
+
+| Componente | Versión |
+|---|---|
+| Odoo | 17, 18 o 19 (Community o Enterprise) |
+| Python | El que exija tu versión de Odoo (3.10+) |
+| Librerías | `requests` y `beautifulsoup4` en el entorno de Odoo |
+| Módulos Odoo | `product` y `sale` (dependencias del manifiesto) |
+
+El módulo no incluye un `requirements.txt`: instala las dos librerías en el mismo Python que ejecuta Odoo.
+
+### Instalación
+
+1. Copia la carpeta `odoo-dynamic-pricing` dentro de tu directorio de *addons* y renómbrala a `dynamic_pricing` (el nombre debe ser un identificador válido de módulo).
+2. Reinicia el servicio de Odoo.
+3. Activa el **modo desarrollador**.
+4. Ve a **Aplicaciones → Actualizar lista de aplicaciones**.
+5. Busca **Dynamic Competitor Pricing** e instálalo.
+
+```bash
+pip install requests beautifulsoup4
+sudo systemctl restart odoo        # según tu instalación
+```
+
+> [!IMPORTANT]
+> La carpeta debe llamarse igual que el módulo para que Odoo lo detecte. Si copias el repositorio tal cual (`odoo-dynamic-pricing`), Odoo no lo verá.
+
+### Configuración por producto
+
+Abre **Ventas → Productos** y entra en cualquier producto. Verás la pestaña **Dynamic Competitor Pricing** con estos campos:
+
+| Campo | Qué controla |
+|---|---|
+| `Enable Dynamic Pricing` | Activa la regla para ese producto |
+| `Minimum Margin (%)` | Margen mínimo sobre `standard_price` |
+| `Adjustment Rule` | Regla de cálculo del nuevo precio |
+| `Rule Value (X)` | Porcentaje o importe fijo que aplica la regla |
+| `Alert Threshold (%)` | Variación de la competencia que dispara la alerta (15 % por defecto) |
+| `Competitor URLs` | Lista de URLs rivales, con su plataforma |
+
+Reglas disponibles:
+
+| Regla | Comportamiento |
+|---|---|
+| `Lowest competitor - X%` | Precio del rival más barato menos X % |
+| `Lowest competitor - Fixed Amount` | Precio del rival más barato menos un importe |
+| `Average competitor` | Media de los precios obtenidos |
+| `Predictive Trend Match` | Ajuste según la tendencia detectada |
+
+En la misma pestaña añade las URLs de la competencia: elige la plataforma y pega la URL de la ficha del producto.
+
+### Automatización (CRON)
+
+El módulo crea la acción planificada **Dynamic Pricing: Update Dynamic Prices**, que se ejecuta **una vez al día** y procesa los productos con precios dinámicos activos. Puedes cambiarla en **Ajustes → Técnico → Acciones planificadas**.
+
+El CRON:
+
+1. Lee las URLs de cada producto activo.
+2. Scrapea los precios en paralelo.
+3. Aplica la regla y comprueba el margen mínimo.
+4. Actualiza `list_price` y guarda el registro del cambio.
+
+### Panel de resultados y ROI
+
+- **Price Fluctuation**: botón inteligente en el producto que abre el histórico de cambios en vista gráfica y de lista.
+- **Impacto en ventas**: el panel de la pestaña compara unidades vendidas e ingresos del periodo con la regla activa frente al periodo anterior equivalente, usando datos de `sale.order.line`.
+
+### Importación masiva de URLs
+
+1. Ve a **Ventas → Productos → Import Competitor URLs**.
+2. Sube un CSV con las columnas `sku`, `platform` y `url`.
+3. Revisa el catálogo consolidado en **Ventas → Productos → Competitor URLs**.
+
+La exportación nativa de Odoo sirve para generar plantillas o informes de esas URLs.
+
+### Alertas de competencia
+
+Cuando un competidor sube o baja el precio más allá de `Alert Threshold (%)`:
+
+- Se escribe un aviso destacado en el **chatter del producto**.
+- Se crea una **actividad To-Do** asignada al responsable del producto.
+
+### Configuración avanzada
+
+Con el modo desarrollador activo, en **Ajustes → Técnico → Parámetros del sistema**:
+
+| Clave | Valor |
+|---|---|
+| `dynamic_pricing.proxy_url` | Proxy, p. ej. `http://usuario:clave@ip:puerto` |
+| `dynamic_pricing.api_provider` | `scrapingbee` o `zenrows` |
+| `dynamic_pricing.api_key` | Clave privada del proveedor |
+| `dynamic_pricing.render_js` | `True` para renderizar JavaScript (SPA, React, Vue) |
+
+El proxy y los proveedores de scraping ayudan con errores 403 y captchas, pero no los eliminan: si un sitio bloquea el scraping, la extracción fallará para ese producto.
+
+### Estructura del módulo
+
+```text
+odoo-dynamic-pricing/
+├── __init__.py
+├── __manifest__.py                     # Metadatos, dependencias y datos
+├── data/cron_data.xml                  # CRON diario
+├── models/
+│   ├── product_template.py             # Reglas, campos y actualización de precio
+│   ├── scraper_utils.py                # requests + BeautifulSoup, proxies y APIs
+│   ├── dynamic_competitor_url.py       # URLs de competidores
+│   ├── dynamic_competitor_price_log.py # Histórico de precios rivales
+│   ├── dynamic_price_log.py            # Histórico de cambios propios
+│   ├── dynamic_pricing_dashboard.py    # Panel de ROI
+│   └── import_competitor_url_wizard.py # Asistente CSV
+├── security/ir.model.access.csv
+├── views/                              # Vistas, pestañas y dashboard
+├── static/description/icon.png
+├── LICENSE
+└── README.md
+```
+
+### Límites y buenas prácticas
+
+- **El scraping es frágil por naturaleza**: si la tienda cambia su HTML o añade protección anti-bot, el precio no se extraerá. Revisa los logs del CRON y el histórico.
+- **Respeta los términos de uso** de los sitios que consultes y la legislación aplicable. Automatizar precios no autoriza a ignorar sus condiciones ni el `robots.txt`.
+- **Prueba con un producto y una URL** antes de activar el módulo en todo el catálogo.
+- **El margen mínimo es tu red de seguridad**, pero depende de que `standard_price` esté bien mantenido; si el coste es incorrecto, la protección no sirve.
+- **La comparación de ROI** usa la fecha del primer registro de precio como inicio del periodo activo: si borras esos registros, el cálculo se reinicia.
+- **Licencia del manifiesto**: `__manifest__.py` declara `LGPL-3` mientras que el archivo `LICENSE` es MIT y el repositorio figura como MIT. Si vas a redistuir el módulo, unifica ese campo con la licencia real.
+
+### Licencia
+
+**MIT** — consulta [LICENSE](LICENSE).
 
 ---
 
-# English Version
+## English
 
-**Dynamic Competitor Pricing for Odoo**
+### Table of contents
 
-**Dynamic Competitor Pricing** is an advanced module for Odoo (v17, 18 and 19) designed to automate and optimize your e-commerce or inventory pricing strategy by scraping competitor prices.
+- [Overview](#overview)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Per-product configuration](#per-product-configuration)
+- [Automation (CRON)](#automation-cron)
+- [Results panel and ROI](#results-panel-and-roi)
+- [Bulk URL import](#bulk-url-import)
+- [Competitor alerts](#competitor-alerts)
+- [Advanced configuration](#advanced-configuration)
+- [Module structure](#module-structure)
+- [Limits and best practices](#limits-and-best-practices)
+- [License](#license)
 
-## 🚀 Key Features
+### Overview
 
-*   **Automated Scraping:** Periodic extraction of competitor prices (e.g. Amazon, Google Shopping, and others).
-*   **Smart Price Rules:** Automatically adjust your product price to match the competition, be a percentage cheaper, or reduce the price by a fixed amount.
-*   **Margin Protection (Safety Net):** You will never sell at a loss. The system stops price drops if the calculation suggests a price below Cost (`standard_price`) + the configured Minimum Margin.
-*   **Critical Fluctuation Alerts:** Automatically generates warnings and Odoo **To-Do activities** when a competitor changes its price above a defined threshold (e.g. 15%).
-*   **Sales Strategy ROI:** Integrated analytics panel comparing sales and revenue in the active period vs. the same period before the rule was active.
-*   **Bulk Management (CSV):** Built-in wizard to import thousands of competitor URLs and a centralized list for direct export to Excel.
-*   **History and Audit:** Charts embedded in the product dashboard and an auditable log of every price change (when, how much, and why).
-*   **Block Avoidance (Throttling & Proxies):** Automatic User-Agent rotation, random delays (throttling) between requests and support for Proxies via system parameters.
+An **Odoo 17, 18 and 19** module that adjusts your products' sales price from **competitor prices** obtained by scraping. You define an adjustment rule, a minimum safety margin and an alert threshold; a daily CRON walks the active catalogue, updates `list_price` and records every change.
 
-## ⚙️ Configuration and Usage
+### Features
 
-### 1. Enable dynamic pricing per product
-Go to Sales > Products and open any product (Template). You will see a new tab called **"Dynamic Competitor Pricing"**.
-- Toggle **Enable Dynamic Pricing**.
-- Set your **Minimum Margin (%)** (minimum margin over cost).
-- Choose your **Adjustment Rule** (e.g. `Lowest competitor - X%`).
-- Set the **Alert Threshold (%)** (default `15.0%`).
+- **Automated scraping** of product pages (Amazon, Google Shopping and others).
+- **Four adjustment rules**: lowest competitor minus a percentage, minus a fixed amount, competitor average, and predictive trend matching.
+- **Margin protection**: the price never drops below `standard_price` + the configured minimum margin.
+- **Fluctuation alerts**: when a competitor moves beyond the threshold, a warning lands in the chatter and a *To-Do* activity is created.
+- **Strategy ROI**: compares units and revenue for the active period against the equivalent previous period.
+- **Auditable history**: a *Price Fluctuation* smart button with a chart and a list of changes.
+- **Bulk CSV import** and a centralised, Excel-exportable URL list.
+- **Anti-blocking**: *User-Agent* rotation, random delays and support for proxies or scraping APIs.
+- **Multi-threading**: several URLs for the same product are fetched in parallel with `ThreadPoolExecutor`.
 
-### 2. Add Competitors
-In the same tab, add competitor URLs in the **Competitor URLs** section. Select the platform and paste the URL of their product page.
+### Requirements
 
-### 3. Automation (CRON)
-The module automatically installs a scheduled action (CRON) called `Dynamic Pricing: Update Dynamic Prices`. By default it runs once a day at night, extracting prices and adjusting the `list_price` of the entire active catalog.
+| Component | Version |
+|---|---|
+| Odoo | 17, 18 or 19 (Community or Enterprise) |
+| Python | Whatever your Odoo version requires (3.10+) |
+| Libraries | `requests` and `beautifulsoup4` in the Odoo environment |
+| Odoo modules | `product` and `sale` (manifest dependencies) |
 
-## 📊 Results and ROI Analysis
-Every product with active dynamic pricing includes state-of-the-art analytics:
-1. **Price History:** A smart button **"Price Fluctuation"** in the top-right corner opens a historical chart with every price jump applied by the system.
-2. **Sales Impact (ROI):** The "Dynamic Competitor Pricing" tab shows a sales performance panel that crosses real-time data with the `sale` module, reporting units sold, accumulated revenue and percentage increase vs. the equivalent previous period.
+The module ships no `requirements.txt`: install both libraries into the same Python that runs Odoo.
 
-## 📥 Bulk Catalog Management (CSV/Excel)
-To instantly seed large catalogs:
-1. Go to **Sales > Products > Import Competitor URLs**.
-2. Upload a CSV file with the columns `sku` (internal reference), `platform` and `url`. The wizard handles the rest.
-3. Go to **Sales > Products > Competitor URLs** to see the consolidated catalog of competitor links and use Odoo's native export tool to obtain templates or detailed reports.
+### Installation
 
-## 🔔 Active Competitor Alerts
-If a competitor undercuts prices or raises them above the percentage configured in **Alert Threshold (%)**:
-* A highlighted warning log is recorded in the **product chatter**.
-* An **Odoo activity (To-Do)** is automatically created and assigned to the product's responsible admin so strategic decisions can be made immediately.
+1. Copy the `odoo-dynamic-pricing` folder into your *addons* directory and rename it to `dynamic_pricing` (the folder must be a valid module identifier).
+2. Restart the Odoo service.
+3. Enable **developer mode**.
+4. Go to **Apps → Update Apps List**.
+5. Search for **Dynamic Competitor Pricing** and install it.
 
-## 🛠 Advanced Technical Configuration
-To avoid IP blocks (Error 403 / Captchas) and render modern websites (SPAs):
-1. Enable developer mode in Odoo.
-2. Go to Settings > Technical > **System Parameters**.
-3. Add any of the following parameters as needed:
-   - `dynamic_pricing.proxy_url`: Your Proxy server (e.g. `http://user:password@proxy_ip:port`).
-   - `dynamic_pricing.api_provider`: `scrapingbee` or `zenrows` to delegate the scraping.
-   - `dynamic_pricing.api_key`: Your private API key for the chosen provider.
-   - `dynamic_pricing.render_js`: Set to `True` if the provider must render JavaScript (ideal for SPAs and React/Vue sites).
+```bash
+pip install requests beautifulsoup4
+sudo systemctl restart odoo        # depending on your setup
+```
 
-> **Multi-threaded Efficiency:** The CRON is optimized with **Multi-Threading** (`ThreadPoolExecutor`). It extracts multiple URLs of the same product in parallel, radically speeding up execution on huge catalogs.
+> [!IMPORTANT]
+> The folder must match the module name for Odoo to detect it. Copying the repository as-is (`odoo-dynamic-pricing`) will not work.
 
----
+### Per-product configuration
 
-**Author:** Alberto Ortiz  
-**License:** MIT  
-**Category:** Sales / E-commerce
+Open **Sales → Products** and enter any product. You will find the **Dynamic Competitor Pricing** tab with these fields:
 
-**Autor:** Alberto Ortiz  
-**Licencia:** LGPL-3  
-**Categoría:** Sales / E-commerce
+| Field | What it controls |
+|---|---|
+| `Enable Dynamic Pricing` | Turns the rule on for that product |
+| `Minimum Margin (%)` | Minimum margin over `standard_price` |
+| `Adjustment Rule` | Price calculation rule |
+| `Rule Value (X)` | Percentage or fixed amount applied by the rule |
+| `Alert Threshold (%)` | Competitor change that triggers the alert (15 % by default) |
+| `Competitor URLs` | List of rival URLs, with their platform |
+
+Available rules:
+
+| Rule | Behaviour |
+|---|---|
+| `Lowest competitor - X%` | Cheapest rival price minus X % |
+| `Lowest competitor - Fixed Amount` | Cheapest rival price minus a fixed amount |
+| `Average competitor` | Average of the fetched prices |
+| `Predictive Trend Match` | Adjustment based on the detected trend |
+
+Add competitor URLs in the same tab: pick the platform and paste the product page URL.
+
+### Automation (CRON)
+
+The module creates the scheduled action **Dynamic Pricing: Update Dynamic Prices**, which runs **once a day** over products with dynamic pricing enabled. You can change it in **Settings → Technical → Scheduled Actions**.
+
+The CRON:
+
+1. Reads each active product's URLs.
+2. Scrapes the prices in parallel.
+3. Applies the rule and checks the minimum margin.
+4. Updates `list_price` and stores the change log.
+
+### Results panel and ROI
+
+- **Price Fluctuation**: a smart button on the product that opens the change history as a chart and a list.
+- **Sales impact**: the tab panel compares units sold and revenue during the active period against the equivalent previous period, using `sale.order.line` data.
+
+### Bulk URL import
+
+1. Go to **Sales → Products → Import Competitor URLs**.
+2. Upload a CSV with the columns `sku`, `platform` and `url`.
+3. Review the consolidated catalogue in **Sales → Products → Competitor URLs**.
+
+Odoo's native export produces templates or reports for those URLs.
+
+### Competitor alerts
+
+When a competitor raises or lowers its price beyond `Alert Threshold (%)`:
+
+- A highlighted warning is written to the **product chatter**.
+- An **Odoo To-Do activity** is created and assigned to the product owner.
+
+### Advanced configuration
+
+With developer mode on, go to **Settings → Technical → System Parameters**:
+
+| Key | Value |
+|---|---|
+| `dynamic_pricing.proxy_url` | Proxy, e.g. `http://user:pass@ip:port` |
+| `dynamic_pricing.api_provider` | `scrapingbee` or `zenrows` |
+| `dynamic_pricing.api_key` | Private provider key |
+| `dynamic_pricing.render_js` | `True` to render JavaScript (SPAs, React, Vue) |
+
+Proxies and scraping providers help with 403 errors and captchas but do not remove them: if a site blocks scraping, extraction fails for that product.
+
+### Module structure
+
+```text
+odoo-dynamic-pricing/
+├── __init__.py
+├── __manifest__.py                     # Metadata, dependencies and data
+├── data/cron_data.xml                  # Daily CRON
+├── models/
+│   ├── product_template.py             # Rules, fields and price updates
+│   ├── scraper_utils.py                # requests + BeautifulSoup, proxies and APIs
+│   ├── dynamic_competitor_url.py       # Competitor URLs
+│   ├── dynamic_competitor_price_log.py # Rival price history
+│   ├── dynamic_price_log.py            # Own price change history
+│   ├── dynamic_pricing_dashboard.py    # ROI panel
+│   └── import_competitor_url_wizard.py # CSV wizard
+├── security/ir.model.access.csv
+├── views/                              # Views, tabs and dashboard
+├── static/description/icon.png
+├── LICENSE
+└── README.md
+```
+
+### Limits and best practices
+
+- **Scraping is fragile by nature**: if a shop changes its HTML or adds anti-bot protection, the price will not be extracted. Check the CRON logs and the history.
+- **Respect the terms of service** of the sites you query and applicable law. Price automation does not entitle you to ignore their conditions or `robots.txt`.
+- **Test with one product and one URL** before enabling the module across the catalogue.
+- **The minimum margin is your safety net**, but it relies on an accurate `standard_price`; a wrong cost defeats the protection.
+- **ROI comparison** uses the first price log entry as the start of the active period: deleting those records resets the calculation.
+- **Manifest licence**: `__manifest__.py` declares `LGPL-3` while the `LICENSE` file is MIT and the repository is listed as MIT. Align that field with the actual licence before redistributing.
+
+### License
+
+**MIT** — see [LICENSE](LICENSE).
